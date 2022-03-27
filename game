@@ -142,6 +142,7 @@ def display_score(SCORE, X, player):
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 
 def game():
+    chad = 0
     clock = pygame.time.Clock()
 
     ADDENEMY = pygame.USEREVENT + 1
@@ -173,10 +174,11 @@ def game():
             if event.type == KEYDOWN:
                 if event.key == K_ESCAPE:
                     running = False
-                if event.key == K_x:
+                if event.key == K_x and chad == 0:
                     pygame.mixer.music.load("audio/chad.mp3")
                     pygame.mixer.music.play(loops=-1)
                     pygame.mixer.music.set_volume(0.25)
+                    chad = 1
 
 
             elif event.type == QUIT:

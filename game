@@ -1,0 +1,284 @@
+#!/usr/bin/env python3
+from os import stat
+from re import S
+import pygame
+import random
+import time
+import sys
+
+from pygame.locals import (
+    RLEACCEL,
+    K_q,
+    K_d,
+    K_x,
+    K_UP,
+    K_DOWN,
+    K_RIGHT,
+    K_LEFT,
+    K_ESCAPE,
+    KEYDOWN,
+    QUIT,
+)
+
+SCREEN_WIDTH = 1280
+SCREEN_HEIGHT = 720
+
+class PlayerOne(pygame.sprite.Sprite):
+    def __init__(self):
+        super(PlayerOne, self).__init__()
+        self.surf = pygame.image.load("pics/zorotl/zorotl1.png").convert_alpha()
+        self.surf.set_colorkey((255, 255, 255), RLEACCEL)
+        self.rect = self.surf.get_rect(center=(
+                SCREEN_WIDTH / 2,
+                SCREEN_HEIGHT - 160,
+            ))
+        self.hp = 100
+        self.speed = 1
+        self.x_pressed = 0
+
+    def update(self, pressed_keys):
+        if pressed_keys[K_q]:
+            self.rect.move_ip(-20 * self.speed, 0)
+        if pressed_keys[K_d]:
+            self.rect.move_ip(20 * self.speed, 0)
+        if pressed_keys[K_x] and self.x_pressed == 0:
+            self.surf = pygame.image.load("pics/chad.png").convert_alpha()
+            self.hp += 100
+            self.speed = 1.5
+            self.x_pressed = 1
+
+        if self.rect.left < 0:
+            self.rect.left = 0
+        elif self.rect.right > SCREEN_WIDTH:
+            self.rect.right = SCREEN_WIDTH
+        if self.rect.top <= 0:
+            self.rect.top = 0
+        elif self.rect.bottom >= SCREEN_HEIGHT:
+            self.rect.bottom = SCREEN_HEIGHT
+
+class PlayerTwo(pygame.sprite.Sprite):
+    def __init__(self):
+        super(PlayerTwo, self).__init__()
+        self.surf = pygame.image.load("pics/zorotl/zorotl3.png").convert_alpha()
+        self.surf.set_colorkey((255, 255, 255), RLEACCEL)
+        self.rect = self.surf.get_rect(center=(
+                SCREEN_WIDTH / 2,
+                SCREEN_HEIGHT - 160,
+            ))
+        self.hp = 100
+
+    def update(self, pressed_keys):
+        if pressed_keys[K_LEFT]:
+            self.rect.move_ip(-20, 0)
+        if pressed_keys[K_RIGHT]:
+            self.rect.move_ip(20, 0)
+
+        if self.rect.left < 0:
+            self.rect.left = 0
+        elif self.rect.right > SCREEN_WIDTH:
+            self.rect.right = SCREEN_WIDTH
+        if self.rect.top <= 0:
+            self.rect.top = 0
+        elif self.rect.bottom >= SCREEN_HEIGHT:
+            self.rect.bottom = SCREEN_HEIGHT
+
+class Bottle(pygame.sprite.Sprite):
+    def __init__(self):
+        super(Bottle, self).__init__()
+        self.surf = pygame.image.load("pics/sprite.png").convert_alpha()
+        self.surf.set_colorkey((255, 255, 255), RLEACCEL)
+        self.rect = self.surf.get_rect(
+            center=(
+                random.randint(25, SCREEN_WIDTH - 25),
+                random.randint(-100, 0),
+            )
+        )
+        self.speed = random.randint(15, 30)
+
+    def update(self):
+        self.rect.move_ip(0, self.speed)
+        if self.rect.right < 0:
+            self.kill()
+
+class Can(pygame.sprite.Sprite):
+    def __init__(self):
+        super(Can, self).__init__()
+        self.surf = pygame.image.load("pics/canette.png").convert_alpha()
+        self.surf.set_colorkey((255, 255, 255), RLEACCEL)
+        self.rect = self.surf.get_rect(
+            center = (
+                random.randint(-25, SCREEN_WIDTH - 25),
+                random.randint(-100, 0),
+            )
+        )
+        self.speed = random.randint(15, 30)
+
+    def update(self):
+        self.rect.move_ip(0, self.speed)
+        if self.rect.right < 0:
+            self.kill()
+
+class Background(pygame.sprite.Sprite):
+    def __init__(self):
+        super(Background, self).__init__()
+        pygame.Surface((32,32))
+        self.surf = pygame.image.load("pics/blue_background.png").convert_alpha()
+        self.surf.set_colorkey((135, 206, 250), RLEACCEL)
+        self.rect = self.surf.get_rect(
+            center=(SCREEN_WIDTH / 2, (SCREEN_HEIGHT / 2))
+        )
+
+    def update(self):
+        self.rect.move_ip(0, 0)
+
+pygame.mixer.init()
+pygame.init()
+
+def display_score(SCORE, X, player):
+    font = pygame.font.Font('freesansbold.ttf', 32)   
+    score = font.render("Player " + str(player) + "'s health: " + str(int(SCORE)), True, (255, 0, 0))
+    screen.blit(score, (X, 25))
+    pygame.draw.rect(screen, (144, 238, 144), pygame.Rect(X + 60, 75, SCORE * 2, 30))
+    pygame.draw.rect(screen, (255,0,0), pygame.Rect(X + 60 + SCORE * 2, 75, 200 - (SCORE * 2), 30))
+
+screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+
+def game():
+    clock = pygame.time.Clock()
+
+    ADDENEMY = pygame.USEREVENT + 1
+    pygame.time.set_timer(ADDENEMY, 250)
+    ADDMONEY = pygame.USEREVENT + 3
+    pygame.time.set_timer(ADDMONEY, 350)
+
+    player = PlayerOne()
+    player2 = PlayerTwo()
+
+    background = pygame.sprite.Group()
+    background.add(Background())
+    enemies = pygame.sprite.Group()
+    money = pygame.sprite.Group()
+    all_sprites = pygame.sprite.Group()
+    all_sprites.add(background)
+    all_sprites.add(player)
+    all_sprites.add(player2)
+
+    pygame.mixer.music.load("audio/main_theme.mp3")
+    # pygame.mixer.music.play(loops=-1)
+
+    running = True
+    tmp = False
+
+    while running:
+        for event in pygame.event.get():
+            if event.type == KEYDOWN:
+                if event.key == K_ESCAPE:
+                    running = False
+
+            elif event.type == QUIT:
+                running = False
+
+            elif event.type == ADDENEMY:
+                new_enemy = Bottle()
+                enemies.add(new_enemy)
+                all_sprites.add(new_enemy)
+            
+            elif event.type == ADDMONEY:
+                new_money = Can()
+                money.add(new_money)
+                all_sprites.add(new_money)
+            
+        pressed_keys = pygame.key.get_pressed()
+        player.update(pressed_keys)
+        player2.update(pressed_keys)
+
+        background.update()
+        enemies.update()
+        money.update()
+        # screen.fill((135, 206, 250))
+
+        for entity in all_sprites:
+            screen.blit(entity.surf, entity.rect)
+
+        display_score(player.hp, 25, 1)
+        display_score(player2.hp, 900, 2)
+
+        if player.hp <= 0 or player2.hp <= 0:
+            player.kill()
+            player2.kill()
+            all_sprites.remove(enemies)
+            all_sprites.remove(money)
+
+            pygame.mixer.music.stop()
+            running = False
+            if player.hp <= 0:
+                PLAYER = 2
+            else:
+                PLAYER = 1
+            game_over(all_sprites, PLAYER)
+
+        for enemy in enemies:
+            if pygame.sprite.spritecollide(player, enemies, True):
+                all_sprites.remove(enemy)
+                player.hp -= 10
+            if pygame.sprite.spritecollide(player2, enemies, True):
+                all_sprites.remove(enemy)
+                player2.hp -= 10
+        for enemy in money:
+            if pygame.sprite.spritecollide(player, money, True):
+                all_sprites.remove(enemy)
+                player.hp -= 5
+            if pygame.sprite.spritecollide(player2, money, True):
+                all_sprites.remove(enemy)
+                player2.hp -= 5
+
+        pygame.display.flip()
+        clock.tick(30)
+
+
+def display_game_over(PLAYER):
+    font = pygame.font.Font('freesansbold.ttf', 25)
+    gm = font.render("GAME OVER", True, (0, 0, 138))
+    screen.blit(gm, (SCREEN_WIDTH / 2 - 75, SCREEN_HEIGHT / 2 - 300))
+    fail = font.render("Just don't eat cans and bottles in your next life you retarded alien", True, (0, 0, 138))
+    screen.blit(fail, (SCREEN_WIDTH / 2 - 425, SCREEN_HEIGHT / 2 - 200))
+    retry = font.render("You're beeing just as smart as a fish", True, (0, 0, 138))
+    screen.blit(retry, (SCREEN_WIDTH / 2 - 225, SCREEN_HEIGHT / 2 - 100))
+    retry = font.render("Player " + str(PLAYER) + " won the game !", True, (255, 0, 0))
+    screen.blit(retry, (SCREEN_WIDTH / 2 - 150, SCREEN_HEIGHT / 2))
+    retry = font.render("Press 'R' to retry, or 'E' to exit the game", True, (0, 0, 138))
+    screen.blit(retry, (SCREEN_WIDTH / 2 - 250, SCREEN_HEIGHT / 2 + 100))
+
+
+def game_over(all_sprites, PLAYER):
+    all_sprites = pygame.sprite.Group()
+    all_sprites.add(Background())
+    running = True
+    clock = pygame.time.Clock()
+    
+    while running:
+        for event in pygame.event.get():
+            if event.type == KEYDOWN:
+                if event.key == K_ESCAPE:
+                    running = False
+                elif event.key == pygame.K_e:
+                    running = False
+                elif event.key == pygame.K_r:
+                    running = False
+                    game()
+            elif event.type == QUIT:
+                running = False
+
+        for entity in all_sprites:
+            screen.blit(entity.surf, entity.rect)
+
+        display_game_over(PLAYER)
+        pygame.display.flip()
+        clock.tick(30)
+
+
+#################################################################
+game()
+
+pygame.mixer.music.stop()
+pygame.mixer.quit()

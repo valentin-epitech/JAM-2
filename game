@@ -11,8 +11,6 @@ from pygame.locals import (
     K_q,
     K_d,
     K_x,
-    K_UP,
-    K_DOWN,
     K_RIGHT,
     K_LEFT,
     K_ESCAPE,
@@ -164,7 +162,8 @@ def game():
     all_sprites.add(player2)
 
     pygame.mixer.music.load("audio/main_theme.mp3")
-    # pygame.mixer.music.play(loops=-1)
+    pygame.mixer.music.play(loops=-1)
+    pygame.mixer.music.set_volume(0.25)
 
     running = True
     tmp = False
@@ -174,6 +173,11 @@ def game():
             if event.type == KEYDOWN:
                 if event.key == K_ESCAPE:
                     running = False
+                if event.key == K_x:
+                    pygame.mixer.music.load("audio/chad.mp3")
+                    pygame.mixer.music.play(loops=-1)
+                    pygame.mixer.music.set_volume(0.25)
+
 
             elif event.type == QUIT:
                 running = False

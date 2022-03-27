@@ -180,7 +180,6 @@ def game():
                     pygame.mixer.music.set_volume(0.25)
                     chad = 1
 
-
             elif event.type == QUIT:
                 running = False
 
@@ -226,16 +225,24 @@ def game():
         for enemy in enemies:
             if pygame.sprite.spritecollide(player, enemies, True):
                 all_sprites.remove(enemy)
+                pygame.mixer.Channel(1).set_volume(0.25)
+                pygame.mixer.Channel(1).play(pygame.mixer.Sound("audio/crunch.mp3"))
                 player.hp -= 10
             if pygame.sprite.spritecollide(player2, enemies, True):
                 all_sprites.remove(enemy)
+                pygame.mixer.Channel(2).set_volume(0.25)
+                pygame.mixer.Channel(2).play(pygame.mixer.Sound("audio/crunch.mp3"))
                 player2.hp -= 10
         for enemy in money:
             if pygame.sprite.spritecollide(player, money, True):
                 all_sprites.remove(enemy)
+                pygame.mixer.Channel(3).set_volume(0.25)
+                pygame.mixer.Channel(3).play(pygame.mixer.Sound("audio/crunch.mp3"))
                 player.hp -= 5
             if pygame.sprite.spritecollide(player2, money, True):
                 all_sprites.remove(enemy)
+                pygame.mixer.Channel(4).set_volume(0.25)
+                pygame.mixer.Channel(4).play(pygame.mixer.Sound("audio/crunch.mp3"))
                 player2.hp -= 5
 
         pygame.display.flip()
